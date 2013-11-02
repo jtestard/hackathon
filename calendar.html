@@ -1,0 +1,84 @@
+<html>
+	<head>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+    <script>
+	var clientId = '98644955285-r0e4sp7schk83j293ueni1hrj4dbshuc.apps.googleusercontent.com';
+	var apiKey = 'AIzaSyCvzlBXLXBz36knHr1jKF0q01mXs6HdSLY';
+	var scopes = 'https://www.googleapis.com/auth/calendar';
+	function makeApiCall() {
+		gapi.client.load('calendar', 'v3', function() {
+    			var request = gapi.client.calendar.events.list({'calendarId': 'primary'});
+    			request.execute(function(resp) {
+    				console.log(resp);
+      				for (var i = 0; i < resp.items.length; i++) {
+        				var li = document.createElement('li');
+        				li.appendChild(document.createTextNode(resp.items[i].summary));
+        				document.getElementById('events').appendChild(li);
+      				}
+			});
+		});
+	}	
+	function handleClientLoad() {
+  		gapi.client.setApiKey(apiKey);
+  		window.setTimeout(checkAuth,1);
+  		checkAuth();
+	}
+
+	function checkAuth() {
+  		gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: true},handleAuthResult);
+	}
+	
+	function insertEvent() {
+		//First insert into Google calendar
+		var url = "https://www.googleapis.com/calendar/v3/calendars/jules.testard@gmail.com/events/";
+		$.ajax({
+			type : "POST",
+			url : url,
+			data : {
+				territory_name : territory.name,
+				method : 'delete_territory',
+				format : 'json'},
+			dataType : 'json',
+			success :function(response) {
+				console.log(JSON.stringify(response));
+			},
+			error : function (error,why) {
+				console.log(JSON.stringify(error));
+				if (!(error.responseText==='Array')) {
+					//An error occurred
+					alert(error.responseText);
+				}
+			}
+		});
+	}
+
+	function handleAuthResult(authResult) {
+ 		var authorizeButton = document.getElementById('authorize-button');
+  		if (authResult) {
+    			authorizeButton.style.visibility = 'hidden';
+    			makeApiCall();
+  		} else {
+   			 authorizeButton.style.visibility = '';
+   			 authorizeButton.onclick = handleAuthClick;
+   		}
+	}
+
+	function handleAuthClick(event) {
+  		gapi.auth.authorize({client_id: clientId, scope: scopes, immediate: false},handleAuthResult);
+  		return false;
+	}
+    </script>
+    <script src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
+	<script>$(document).ready(function(){});</script>
+	</head>
+  <body>
+    <div id='content'>
+      <h1>Events</h1>
+      <ul id='events'></ul>
+      <button style="width:50px;background-color:#ddd;" onclick="return insertEvent();"></button>
+      <h1> Calendar </h1>
+      <iframe src="https://www.google.com/calendar/embed?src=uniclasstest%40gmail.com&ctz=America/Los_Angeles" style="border: 0" width="800" height="600" frameborder="0" scrolling="no"></iframe>
+    </div>
+    <a href='#' id='authorize-button' onclick='handleAuthClick();'>Login</a>
+  </body>
+</html>
